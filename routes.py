@@ -43,3 +43,11 @@ def setup_routes(app: FastAPI):
         thread.start()
         delivery_threads.append(thread)
         return {"message": f"Delivery thread for port {port} started"}
+
+    @app.post("/stop_delivery")
+    async def stop_delivery():
+        for thread in delivery_threads:
+            thread.stop()
+            thread.join()
+        delivery_threads.clear()
+        return {"message": "All delivery threads stopped"}
