@@ -59,3 +59,6 @@ class DeliveryThread(threading.Thread):
 
                     # Update delivered count and store in Redis (backup)
                     redis_client.incr(self.delivered_key)
+
+    def stop(self):
+        self.running = False
