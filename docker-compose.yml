@@ -1,0 +1,8 @@
+version: "3"
+services:
+  event-collect-deliver:
+    image: image_name_xyz
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
