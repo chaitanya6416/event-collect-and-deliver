@@ -10,6 +10,13 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping"
+    
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
