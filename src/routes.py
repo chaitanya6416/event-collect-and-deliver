@@ -1,7 +1,5 @@
-# routes.py
 from fastapi import HTTPException
 import json
-# from logger import logger
 from delivery_thread import DeliveryThread
 from fastapi import FastAPI
 from redis_client import redis_client

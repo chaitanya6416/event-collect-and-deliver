@@ -1,4 +1,4 @@
-# delivery_thread.py
+import config
 import threading
 import requests
 import json
@@ -14,8 +14,7 @@ class DeliveryThread(threading.Thread):
         self.delivered_key = f"port_{port}_delivered"
         self.running = True
 
-    # Retry 3 times with a fixed 1-second interval
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
+    @retry(stop=stop_after_attempt(config.RETRY_ATTEMPTS), wait=wait_fixed(config.WAIT_BETWEEN_REQUESTS))
     def post_the_payload(self, payload):
         try:
             response = requests.post(
