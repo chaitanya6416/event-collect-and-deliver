@@ -31,6 +31,6 @@ def test_start_delivery_and_check_redis():
     redis_client.flushall()
     client.post("/start_delivery?port=5555")
     time.sleep(1)
-    assert redis_client.get("port_5555_delivered") == 0
+    assert redis_client.get("port_5555_delivered") == '0'
     client.post("/stop_delivery")
     redis_client.flushall()
