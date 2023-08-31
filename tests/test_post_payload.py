@@ -39,7 +39,6 @@ class TestDeliveryThread(unittest.TestCase):
 
         payload = {"user_id": "123456", "payload": "This is a test payload"}
         client.post("/collect_api", json=payload)
-        time.sleep(5)
         assert mock_post.call_count >= 1
         client.post("/stop_delivery")
 
