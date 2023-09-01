@@ -7,5 +7,7 @@ WAIT_BETWEEN_REQUESTS = 1
 
 delivery_threads = []
 
+redis_client = None
+
 def get_stream_name():
     return "delivery_requests_stream"

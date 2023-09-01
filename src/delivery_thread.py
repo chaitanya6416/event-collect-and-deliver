@@ -4,7 +4,10 @@ import requests
 import json
 from logger import logger
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
-from redis_client import redis_client
+# from redis_client import redis_client
+from redis_client import RedisClient
+
+redis_client = config.redis_client
 
 
 def log_after(retry_state):

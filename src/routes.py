@@ -2,10 +2,12 @@ from fastapi import HTTPException
 import json
 from delivery_thread import DeliveryThread
 from fastapi import FastAPI
-from redis_client import redis_client
+# from redis_client import redis_client
 import config
 import redis
+from contextlib import asynccontextmanager
 
+redis_client = config.redis_client
 
 def setup_routes(app: FastAPI):
     @app.post("/collect_api")
