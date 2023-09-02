@@ -1,26 +1,34 @@
-import config
+'''
+this file contains the delivery thread start up and running functionalities
+'''
+
+import json
 import threading
 import requests
-import json
-from logger import logger
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
-# from redis_client import redis_client
+
+
+import config
+from logger import logger
 from redis_client import RedisClient
 
-redis_client = config.redis_client
+redis_client = RedisClient().get_client_instance()
 
 
 def log_after(retry_state):
+    ''' log after each @retry '''
     logger.info(
-        f"[THREAD] [Attempt Failed] attempt:{retry_state.attempt_number}")
+        "[THREAD] [Attempt Failed] attempt: %s", retry_state.attempt_number)
 
 
 def log_before(retry_state):
+    ''' log before each @retry '''
     logger.info(
-        f"[THREAD] [Attempting Now] attempt:{retry_state.attempt_number}")
+        "[THREAD] [Attempting Now] attempt: %s", retry_state.attempt_number)
 
 
 class DeliveryThread(threading.Thread):
+    ''' every delivery thread spawned uses this class items & methods.'''
     def __init__(self, port):
         super().__init__()
         self.port = port
@@ -37,12 +45,17 @@ class DeliveryThread(threading.Thread):
         after=log_after
     )
     def post_the_payload(self, payload):
+        ''' delivery action needs retry with specific logic as to retry count, 
+        wait time between retries.
+        Hence, moved this particular action to a new function '''
         response = requests.post(
-            f"http://localhost:{self.port}/", json=payload)
+            f"http://localhost:{self.port}/", json=payload, timeout = 5)
         response.raise_for_status()
-        logger.info(f"Successfully delivered at port {self.port}")
+        logger.info("Successfully delivered at port: %s", self.port)
 
     def run(self):
+        ''' threads active will keep running & 
+        check the redis stream & then call post_the_payload '''
         while self.running:
             # Read from the Redis Stream using XREAD
             response = redis_client.xread(
@@ -62,12 +75,12 @@ class DeliveryThread(threading.Thread):
                 payload = json.loads(request_payload_json)
 
                 logger.info(
-                    f"Delivering payload: {payload} to {self.port}")
+                    "Delivering payload: %s to port: %s", payload, self.port)
 
                 try:
                     self.post_the_payload(payload)
-                except requests.RequestException as e:
-                    print(f'FAILED: {e}')
+                except requests.RequestException as ex:
+                    print("FAILED: %s", ex)
                     # store the request id as failed
                     redis_client.append(
                         self.thread_failures_in_redis, f", {request_payload_ingestion_id}")
@@ -78,4 +91,5 @@ class DeliveryThread(threading.Thread):
                                      request_payload_ingestion_id)
 
     def stop(self):
+        ''' should be called to stop thread execution '''
         self.running = False

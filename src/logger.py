@@ -1,3 +1,4 @@
+''' defined basic logging format here, files can import and use from here '''
 import logging
 
 

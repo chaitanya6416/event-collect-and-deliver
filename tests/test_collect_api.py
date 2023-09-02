@@ -1,12 +1,13 @@
 from fastapi.testclient import TestClient
 
 from src.main import app
-from src.redis_client import redis_client
+from src.redis_client import RedisClient
 import config
 client = TestClient(app)
 
 
 def test_postive_collect_api():
+    redis_client = RedisClient().get_client_instance()
     redis_client.flushall()
     payload = {"user_id": "123456", "payload": "This is a test payload"}
     response = client.post("/collect_api", json=payload)
@@ -31,6 +32,7 @@ def test_postive_collect_api():
 
 
 def test_negative_collect_api():
+    redis_client = RedisClient().get_client_instance()
     redis_client.flushall()
     payload = {"payload": "This is a test payload"}
     response = client.post("/collect_api", json=payload)

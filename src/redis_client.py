@@ -1,25 +1,38 @@
-import config
-import redis
+'''
+This file initiates the redis client & checks if the redis server is up.
+If down, retries few times and then raises necessary exception.
+'''
+
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
+import redis
+
+import config
 from logger import logger
 
 
 def log_after(retry_state):
+    '''retry decorator helper, to log after each retry'''
     logger.warning(
-        f"[REDIS CONNECTING...] [Attempt Failed] attempt:{retry_state.attempt_number}")
+        "[REDIS CONNECTING...] [Attempt Failed] attempt: %s", retry_state.attempt_number)
 
 
 def log_before(retry_state):
+    '''retry decorator helper, to log before each retry'''
     logger.info(
-        f"[REDIS CONNECTING...] [Attempting Now] attempt:{retry_state.attempt_number}")
+        "[REDIS CONNECTING...] [Attempting Now] attempt: %s", retry_state.attempt_number)
 
 
 class RedisClient():
+    '''Before running any redis command, we need to check if the server is up & running.'''
+
     def __init__(self):
         self.redis_host = config.REDIS_HOST
         self.redis_port = config.REDIS_PORT
         self.redis_db = config.REDIS_DB
         self.redis_client = None
+
+    def __del__(self):
+        self.redis_client.close()
 
     @retry(
         reraise=True,
@@ -30,6 +43,7 @@ class RedisClient():
         after=log_after
     )
     def get_client_instance(self):
+        '''return the redis client instance'''
         self.redis_client = redis.StrictRedis(
             host=self.redis_host,
             port=self.redis_port,
@@ -38,7 +52,6 @@ class RedisClient():
         )
         ping_response = self.redis_client.ping()
         if ping_response:
-            print("Connected to Redis server successfully")
+            logger.info("Connected to Redis server successfully")
             return self.redis_client
-        else:
-            print("Retrying... redis connection")
+        return None
