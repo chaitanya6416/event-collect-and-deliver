@@ -3,7 +3,7 @@ import time
 from fastapi.testclient import TestClient
 
 from src.main import app
-from src.redis_client import redis_client
+from src.redis_client import RedisClient
 client = TestClient(app)
 
 
@@ -28,6 +28,7 @@ def test_start_delivery_and_check_threads():
 
 
 def test_start_delivery_and_check_redis():
+    redis_client = RedisClient().get_client_instance()
     redis_client.flushall()
     client.post("/start_delivery?port=5555")
     time.sleep(1)
