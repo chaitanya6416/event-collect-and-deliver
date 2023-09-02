@@ -39,11 +39,18 @@ jobs:
 
     - name: Check pylint score
       run: |
-        pylint_score=$(pylint --output-format=text src/ | grep "Your final rating" | awk '{print $NF}')
-        if [ "$pylint_score" -lt 8 ]; then
+        pylint_score=$(pylint --output-format=text src/ | grep -oE "Your code has been rated at [0-9]+\.[0-9]+" | tail -n 1 | awk -F ' ' '{print $7}')
+
+        if [ -z "$pylint_score" ]; then
+          echo "Linting score is not available. Failed the workflow."
+          exit 1
+        fi
+        
+        if [ $(echo "$pylint_score < 8" | bc -l) -eq 1 ]; then
           echo "Linting score is less than 8. Failed the workflow."
           exit 1
         fi
+      
         
     - name: Run Tests
       run: |
