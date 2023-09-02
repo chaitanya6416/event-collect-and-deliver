@@ -11,10 +11,10 @@ def test_start_delivery_and_check_threads():
     threads_at_begin = threading.active_count()
 
     # Make the request to start the delivery thread
-    response = client.post("/start_delivery?port=5555")
+    response = client.post("/start_delivery?port=1598")
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Delivery thread for port 5555 started"}
+    assert response.json() == {"message": "Delivery thread for port 1598 started"}
 
     # Wait for the thread to start
     time.sleep(1)

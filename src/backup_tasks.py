@@ -1,27 +1,24 @@
 ''' backup_tasks is for periodic creation of  rbd and aof files used
 for backups if failure'''
 
+import os
 from apscheduler.schedulers.background import BackgroundScheduler
 import shutil
 import datetime
 from redis_client import RedisClient
-import os
+from config import RDB_BACKUP_DIR, AOF_BACKUP_DIR
 
 # Redis connection
 redis_client = RedisClient().get_client_instance()
 
-# Directory paths for backups
-rdb_backup_dir = 'rdb_backups'
-aof_backup_dir = 'aof_backups'
 
 # Create the directories if they don't exist
-os.makedirs(rdb_backup_dir, exist_ok=True)
-os.makedirs(aof_backup_dir, exist_ok=True)
+os.makedirs(RDB_BACKUP_DIR, exist_ok=True)
+os.makedirs(AOF_BACKUP_DIR, exist_ok=True)
 
 
 def upload_to_s3():
     ''' do upload to s3 for backups '''
-    pass
 
 
 def create_redis_rdb_snapshot():
@@ -29,7 +26,7 @@ def create_redis_rdb_snapshot():
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y%m%d%H%M%S")
     snapshot_filename = f'{timestamp}.rdb'
-    snapshot_path = os.path.join(rdb_backup_dir, snapshot_filename)
+    snapshot_path = os.path.join(RDB_BACKUP_DIR, snapshot_filename)
 
     # Create a Redis RDB snapshot
     redis_client.save()
