@@ -1,3 +1,8 @@
+''' we here are testing the payload delivery function we have 
+    i.e., post_the_payload, which tries to send the payload to the
+    destination
+'''
+
 import unittest
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient

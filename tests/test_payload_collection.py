@@ -1,5 +1,6 @@
-from fastapi.testclient import TestClient
+''' we are here indeed testing the collect_api/ endpoint '''
 
+from fastapi.testclient import TestClient
 from src.main import app
 from src.redis_client import RedisClient
 import config
