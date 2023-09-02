@@ -34,12 +34,12 @@ jobs:
     - name: Lint Code with pylint
       run: |
         pip install pylint
-        pylint your_module_or_directory
+        pylint src/
       continue-on-error: true  # Continue even if pylint returns a non-zero exit code
 
     - name: Check pylint score
       run: |
-        pylint_score=$(pylint --output-format=text your_module_or_directory | grep "Your final rating" | awk '{print $NF}')
+        pylint_score=$(pylint --output-format=text src/ | grep "Your final rating" | awk '{print $NF}')
         if [ "$pylint_score" -lt 8 ]; then
           echo "Linting score is less than 8. Failed the workflow."
           exit 1
