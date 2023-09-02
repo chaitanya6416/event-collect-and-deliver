@@ -12,14 +12,14 @@ from logger import logger
 
 def log_after(retry_state):
     '''retry decorator helper, to log after each retry'''
-    logger.warning(
-        "[REDIS CONNECTING...] [Attempt Failed] attempt: %s", retry_state.attempt_number)
+    # logger.warning(
+    #     "[REDIS CONNECTING...] [Attempt Failed] attempt: %s", retry_state.attempt_number)
 
 
 def log_before(retry_state):
     '''retry decorator helper, to log before each retry'''
-    logger.info(
-        "[REDIS CONNECTING...] [Attempting Now] attempt: %s", retry_state.attempt_number)
+    # logger.info(
+    #     "[REDIS CONNECTING...] [Attempting Now] attempt: %s", retry_state.attempt_number)
 
 
 class RedisClient():
@@ -52,6 +52,6 @@ class RedisClient():
         )
         ping_response = self.redis_client.ping()
         if ping_response:
-            logger.info("Connected to Redis server successfully")
+            # logger.info("Connected to Redis server successfully")
             return self.redis_client
         return None

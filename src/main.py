@@ -1,4 +1,4 @@
-"""this is main.py"""
+''' this is main.py, defined system lifespan events and setup all endpoints (routes) '''
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -9,10 +9,10 @@ from delivery_thread import DeliveryThread
 from logger import logger
 from routes import setup_routes
 from redis_client import RedisClient
-
+from backup_tasks import scheduler
 
 @asynccontextmanager
-async def lifespan():
+async def lifespan(app: FastAPI):
     '''
     This part of code runs a set of commands before the endpoints become available.
     '''
@@ -34,14 +34,16 @@ async def lifespan():
     for each_thread in fetch_already_existing_threads:
         port_number = each_thread.split("_")[-1]
         logger.info(
-            '''[IN STARTUP] Found history in Redis 
-               [Spawing thread to Destination] port: %s''', port_number)
+            '''[IN STARTUP] Found history in Redis [Spawing thread to Destination] port: %s''', port_number)
         thread = DeliveryThread(port=each_thread.split("_")[-1])
         thread.start()
         logger.info(
             "[IN STARTUP] [Thread to] port: %s [Active Now]", port_number)
         config.delivery_threads.append(thread)
     logger.info("[STARTUP DONE]")
+    
+    # #begin redis backups
+    # scheduler.start()
     yield
     # shutdown
     # Gracefully terminate all threads
@@ -50,6 +52,7 @@ async def lifespan():
         thread.stop()
         thread.join()
     config.delivery_threads.clear()
+    # scheduler.shutdown()
     logger.info("[IN SHUTDOWN] Done")
 
 

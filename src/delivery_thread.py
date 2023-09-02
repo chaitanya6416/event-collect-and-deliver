@@ -12,8 +12,6 @@ import config
 from logger import logger
 from redis_client import RedisClient
 
-redis_client = RedisClient().get_client_instance()
-
 
 def log_after(retry_state):
     ''' log after each @retry '''
@@ -29,12 +27,14 @@ def log_before(retry_state):
 
 class DeliveryThread(threading.Thread):
     ''' every delivery thread spawned uses this class items & methods.'''
+
     def __init__(self, port):
         super().__init__()
         self.port = port
         self.running = True
         self.thread_status_in_redis = f"last_delivered_m_id_to_{self.port}"
         self.thread_failures_in_redis = f"failed_m_id_{self.port}"
+        self._redis_client = RedisClient().get_client_instance()
 
     @retry(
         reraise=True,
@@ -49,7 +49,7 @@ class DeliveryThread(threading.Thread):
         wait time between retries.
         Hence, moved this particular action to a new function '''
         response = requests.post(
-            f"http://localhost:{self.port}/", json=payload, timeout = 5)
+            f"http://localhost:{self.port}/", json=payload, timeout=5)
         response.raise_for_status()
         logger.info("Successfully delivered at port: %s", self.port)
 
@@ -58,8 +58,8 @@ class DeliveryThread(threading.Thread):
         check the redis stream & then call post_the_payload '''
         while self.running:
             # Read from the Redis Stream using XREAD
-            response = redis_client.xread(
-                {config.get_stream_name(): redis_client.get(
+            response = self._redis_client.xread(
+                {config.get_stream_name(): self._redis_client.get(
                     self.thread_status_in_redis)},
                 count=1
             )
@@ -82,13 +82,13 @@ class DeliveryThread(threading.Thread):
                 except requests.RequestException as ex:
                     print("FAILED: %s", ex)
                     # store the request id as failed
-                    redis_client.append(
+                    self._redis_client.append(
                         self.thread_failures_in_redis, f", {request_payload_ingestion_id}")
                 finally:
                     # successful or not, we have to move on to next payload to deliver
                     # hence updating
-                    redis_client.set(self.thread_status_in_redis,
-                                     request_payload_ingestion_id)
+                    self._redis_client.set(self.thread_status_in_redis,
+                                           request_payload_ingestion_id)
 
     def stop(self):
         ''' should be called to stop thread execution '''
