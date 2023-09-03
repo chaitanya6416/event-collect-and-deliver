@@ -17,19 +17,34 @@ The Event Collection and Delivery Service is designed to collect event payloads 
 - `/start_delivery`: POST endpoint for starting payload delivery to a specified port.
 - `/stop_delivery`: POST endpoint for stopping all payload delivery threads.
 
+## Let's talk deliverables!
+
+| Requirement | what to achieve? | How did we do it? |
+|-----------------|-----------------|-----------------|
+| Durability | Once an ingested event is accepted, it will remain in the system even if the system crashes or until it is delivered or exhaustively retried. | Two perspectives can arise in the case of durability. (1) system crash & restart (2) Redis crash. <br> (1) The Redis stores the activity status of each delivery thread (the latest payload that is successfully sent). Whenever the system restarts, the system on startup checks the Redis for such information & spawns threads to those destinations and starts the usual thing of delivering payloads. (Find this lifespan events declared here https://github.com/chaitanya6416/event-collect-and-deliver/blob/e4f20ceb7dded2a02c9f31b4bc29e1385017f9c6/src/main.py#L16) <br> (2) Redis supports for RDB and AOF style of backups. The implementation runs a redis_rdb_snapshot every 15 minutes & redis_aof_backup every 1 minute. (to be found here https://github.com/chaitanya6416/event-collect-and-deliver/tree/main/src/backups)|
+| At least once delivery| Assume we have minimal control over the supported destinations. Delivery to destinations might fail for any reason, our system needs to retry. | The task of delivering payloads runs with the help of a retry module. We can configure the behavior of this module as required. Like 'time between retries', 'maximum retry count' etc (find it here https://github.com/chaitanya6416/event-collect-and-deliver/blob/e4f20ceb7dded2a02c9f31b4bc29e1385017f9c6/src/delivery_thread.py#L47) |
+| Retry backoff and limit| Messages should be retried using a backoff algorithm, after a number of delivery attempts, the event should be drained from the system.| The retry module mentioned above has all these functionalities |
+|Maintaining order| Events should be sent in a FIFO method for each destination. | Every delivery thread spawn remembers its delivery state by holding an ID of the last sent payload (can be found here https://github.com/chaitanya6416/event-collect-and-deliver/blob/e4f20ceb7dded2a02c9f31b4bc29e1385017f9c6/src/delivery_thread.py#L90, details about redis stream unique id generation: https://redis.io/docs/data-types/streams/#streams-basics) |
+|Delivery Isolation| Delays or failures with event delivery of a single destination should not affect ingestion or other delivery on other destinations. | Every destination registered in the system will be handled by a separate thread. It has its own 'last successful delivery ID', 'list of failed deliveries', etc. which ensures isolation of deliveries between destinations|
+
 ## Let's Simulate
 
 | Endpoint | Action that takes place | Redis Snapshot at the moment |
 |-----------------|-----------------|-----------------|
-| /start_delivery?port=5555    | a thread is spawned. It stores its delivery state in Redis.     |  `port_5555_deliverd = 0`  |
-| /collect_api payload=p1    |   thread:port_5555 which is already active, attempts to deliver p1 to 55555   |   `port_5555_deliverd = 1` <br> `sequence_number = 1` <br> `delivery_requests = [p1]`   |
-| /collect_api payload=p2   | thread:port_5555 which is already active, attempts to deliver p2 to 55555    |  `port_5555_deliverd = 2` <br> `sequence_number = 2` <br> `delivery_requests = [p1, p2]`     |
-| /start_delivery?port=6666  |  A new thread is spawned, it needs to deliver from the next incoming request. It stores its status number by retrieving current value of sequence_number  |  `port_5555_deliverd = 2` <br> `port_6666_deliverd = 2` <br> `delivery_requests = [p1, p2]` |
-| /collect_api payload=p3   | thread:port_5555, thread:port_6666 which are already active, attempts to deliver p3 to 55555, 6666    |  `port_5555_deliverd = 3` <br> `port_6666_deliverd = 3` <br> `sequence_number = 3` <br> `delivery_requests = [p1, p2, p3]`     |
-| /start_delivery?port=7777  |  Let's assume, the port is not listening and does not accept any requests  |  `port_5555_deliverd = 3` <br> `port_6666_deliverd = 3` <br>`port_7777_deliverd = 3` <br> `sequence_number = 3` <br> `delivery_requests = [p1, p2, p3]` |
-| /collect_api payload=p4   | thread:port_5555, thread:port_6666 which are already active, attempts to deliver p3 to 55555, 6666. thread:port_7777 also starts it work to deliver the payload to 7777. But 7777 is not ready to accept or is down   |  `port_5555_deliverd = 4` <br> `port_6666_deliverd = 4` <br> `port_7777_deliverd = ?` <br> `sequence_number = 4` <br> `delivery_requests = [p1, p2, p3, p4]`   <br> ? => After trying for 3 times (with a wait of 1 second each time), the system compromises on this request and logs it, and updates `port_7777_deliverd` to value 4  |
+| /start_delivery?port=5555    | a thread is spawned. It stores its delivery state in Redis.     |  `last_delivered_m_id_to_5555 = 0`  |
+| /collect_api payload=p1    |   thread-to-port-5555 which is already active, attempts to deliver p1 to 5555   |   `last_delivered_m_id_to_5555 = 2023080812034-0` <br> `redis stream = [p1]`   |
+| /collect_api payload=p2   | thread-to-port-5555 which is already active, attempts to deliver p2 to 5555    |  `last_delivered_m_id_to_5555 = 2023080812099-0` `redis stream = [p1, p2]`     |
+| /start_delivery?port=6666  |  A new thread is spawned, it needs to deliver from the next incoming request. It stores its status from the redis stream info  |  `last_delivered_m_id_to_5555 = 2023080812099-0` <br> `last_delivered_m_id_to_6666 = 2023080812099-0` <br> `delivery_requests = [p1, p2]` |
+| /collect_api payload=p3   | thread-to-port-5555, thread-to-port-6666 which are already active, attempts to deliver p3 to 5555, 6666    |  `last_delivered_m_id_to_5555 = 202308081300-0` <br> `last_delivered_m_id_to_6666 = 202308081300-0` <br> `redis stream = [p1, p2, p3]`     |
+| /start_delivery?port=7777  |  Let's assume, the port is not listening and does not accept any requests  |  `last_delivered_m_id_to_5555 = 202308081300-0` <br> `last_delivered_m_id_to_6666 = 202308081300-0` <br> `last_delivered_m_id_to_7777 = 202308081300-0` <br> `redis stream = [p1, p2, p3]` |
+| /collect_api payload=p4   | thread-to-port-5555, thread-to-port-6666 which are already active, attempts to deliver p3 to 55555, 6666. thread-to-port-7777 also starts its work to deliver the payload to 7777. But 7777 is not ready to accept or is down   |  `last_delivered_m_id_to_5555 = 202308081399-0` <br> `last_delivered_m_id_to_6666 = 202308081399-0` <br> `port_7777_deliverd = ?` <br> `redis stream = [p1, p2, p3, p4]`   <br> ? => After trying say 3 times (with a wait of 1 second each time), the system compromises on this request and stores it, and updates `last_delivered_m_id_to_6666` to value `202308081399-0` which is a value of p4. The system also stores a list of all failed deliveries to each destination, so `failed_m_id_7777 = 202308081399-0` (p4)  |
 
-
+## Periodic Redis Backups
+- Reference: https://redis.io/docs/management/persistence/
+- Two types of persistence options:
+ - RDB (Redis Database): RDB persistence performs point-in-time snapshots of your dataset at specified intervals.
+ - AOF (Append Only File): AOF persistence logs every write operation received by the server. These operations can then be replayed again at server startup, reconstructing the original dataset. Commands are logged using the same format as the Redis protocol itself.
+- The implementation runs a redis_rdb_snapshot every 15 minutes & redis_aof_backup every 1 minute. (to be found here https://github.com/chaitanya6416/event-collect-and-deliver/tree/main/src/backups)
 
 ## Structure
 
