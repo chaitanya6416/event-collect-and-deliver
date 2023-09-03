@@ -39,8 +39,8 @@ class DeliveryThread(threading.Thread):
     @retry(
         reraise=True,
         retry=retry_if_exception_type(),
-        stop=stop_after_attempt(3),
-        wait=wait_fixed(3),
+        stop=stop_after_attempt(config.RETRY_ATTEMPTS),
+        wait=wait_fixed(config.WAIT_BETWEEN_REQUESTS),
         before=log_before,
         after=log_after
     )

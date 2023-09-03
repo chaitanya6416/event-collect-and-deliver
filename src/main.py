@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
     logger.info("[STARTUP DONE]")
     
     # #begin redis backups
-    # scheduler.start()
+    scheduler.start()
     yield
     # shutdown
     # Gracefully terminate all threads
@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
         thread.stop()
         thread.join()
     config.delivery_threads.clear()
-    # scheduler.shutdown()
+    scheduler.shutdown()
     logger.info("[IN SHUTDOWN] Done")
 
 

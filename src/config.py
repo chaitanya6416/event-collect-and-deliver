@@ -7,9 +7,6 @@ REDIS_DB = 0
 RETRY_ATTEMPTS = 3
 WAIT_BETWEEN_REQUESTS = 1
 
-RDB_BACKUP_DIR = 'rdb_backups'
-AOF_BACKUP_DIR = 'aof_backups'
-
 delivery_threads = []
 
 
