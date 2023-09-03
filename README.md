@@ -42,8 +42,8 @@ The Event Collection and Delivery Service is designed to collect event payloads 
 ## Periodic Redis Backups
 - Reference: https://redis.io/docs/management/persistence/
 - Two types of persistence options:
- - RDB (Redis Database): RDB persistence performs point-in-time snapshots of your dataset at specified intervals.
- - AOF (Append Only File): AOF persistence logs every write operation received by the server. These operations can then be replayed again at server startup, reconstructing the original dataset. Commands are logged using the same format as the Redis protocol itself.
+  - RDB (Redis Database): RDB persistence performs point-in-time snapshots of your dataset at specified intervals.
+  - AOF (Append Only File): AOF persistence logs every write operation received by the server. These operations can then be replayed again at server startup, reconstructing the original dataset. Commands are logged using the same format as the Redis protocol itself.
 - The implementation runs a redis_rdb_snapshot every 15 minutes & redis_aof_backup every 1 minute. (to be found here https://github.com/chaitanya6416/event-collect-and-deliver/tree/main/src/backups)
 
 ## Structure
@@ -56,18 +56,23 @@ The Event Collection and Delivery Service is designed to collect event payloads 
 
 ## Let's talk Test cases
 
-- `test_collect_api.py`
+- `test_payload_collection.py`
   - `test_postive_collect_api`: hits the /collect endpoint with a payload & checks if the sequence_number is incremented & stored in Redis.
-  - `test_negative_collect_api`: when /collect endpoint is hit with improper payload, the API should respond with a 400 error status.
+  - `test_negative_collect_api`: When/collect endpoint is hit with improper payload, the API should respond with a 400 error status.
 
-- `test_start_delivery.py`
-  - `test_start_delivery_and_check_threads`: when /start_delivery endpoint is hit along with a port number parameter, a thread has to be spawned. We are testing if any new threads are created here once the endpoint is hit.
-  - `test_start_delivery_and_check_redis`:  when /start_delivery endpoint is hit along with a port number parameter, a thread has to be spawned and it has to store its delivery status in the Redis cache. Here we are checking whether the Redis status for the thread is set.
+- `test_payload_delivery.py`
+  - `test_positive_post_the_payload`: When a thread is actively running & is waiting to deliver any arrived payloads at /collect_api endpoint, it immediately delivers the payload to the destination port. Here we are spawning a thread to deliver a payload to a port, then hitting the /collect_api with a payload & checking whether the running thread is able to make a post request. We mock the actual delivery and just check if the post request is called.
+  - `test_negative_post_the_payload`: After exhausting the set number of attempts, the program must raise a requests.RequestException. Here we are not mocking the request post method & willingly trying to make the payload delivery fail and then trying to check if an exception is raised by asserting like self.assertRaises(RequestException)
+
+- `test_spawn_thread.py`
+  - `test_start_delivery_and_check_threads`: When /start_delivery endpoint is hit along with a port number parameter, a thread has to be spawned. We are testing if any new threads are created here once the endpoint is hit.
+  - `test_start_delivery_and_check_redis`:  When /start_delivery endpoint is hit along with a port number parameter, a thread has to be spawned and it has to store its delivery status in the Redis cache. Here we are checking whether the Redis status for the thread is set.
+  - `test_duplicate_start_delivery_and_check_threads`: when we try to spawn threads to the same destination multiple times. Only one thread should be spawned. Before spawning a thread, the system must check the Redis if any such thread to the same destination is already registered & should not spawn duplicate threads.
  
-- `test_post_payload.py`
-  - `test_positive_post_the_payload`: when a thread is actively running & is waiting to deliver any arrived payloads at /collect_api endpoint, it immediately delivers the payload to the destination port. Here we are spawning a thread to deliver to a port, then hitting the /collect_api with a payload & checking whether the running thread is able to make a post request. We mock the actual delivery and just check if the post request is called.
-  - `test_positive_retry_post_the_payload`: any payload delivery is retried three times as set in the config file. Here we are trying to check if the destination port has rejected payload acceptance for the first time, and whether our delivery thread is retrying and trying to deliver for a second time.
-  - `test_negative_post_the_payload`: after exhausting the set number of attempts, the program must raise a requests.RequestException. Here we are not mocking the request post method & willingly trying to make the payload delivery fail and then trying to check if an exception is raised by asserting like self.assertRaises(RequestException)
+- `test_spawn_thread_on_system_restart.py`
+  -  `test_spawn_already_registered_thread_on_restart`: Imagine a scenario where the system was already running and a few delivery threads were already in the run. When the system restarts, it has to resume these threads as well. This functionality is tested here.
+ 
+- `test_failed_delivery.py`
+  -  `test_failed_delivery_and_check_redis_status`: The system is not only tracking the last successful delivered payload but also a list of failed payload IDs. This functionality is tested here, whether a failed delivery is updated in the Redis.
 
-
-
+ 
