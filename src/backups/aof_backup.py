@@ -1,3 +1,7 @@
+''' all actions performed against redis can be saved to create a point-in-time
+    redis state, this file is responsible to create such a backup file of
+    redis db '''
+
 import redis
 import os
 import shutil

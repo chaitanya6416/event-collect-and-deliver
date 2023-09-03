@@ -1,10 +1,14 @@
+''' one type of redis back is rdb which stores the db instance in a byte format,
+    this file helps us in taking rdb snapshots '''
+
 import os
-import shutil
-from datetime import datetime
-import hashlib
-import redis
-from time import sleep
 import sys
+import shutil
+import hashlib
+from datetime import datetime
+from time import sleep
+import redis
+
 
 redis_client = redis.StrictRedis(
     host='localhost',
@@ -19,9 +23,9 @@ def file_md5(filename, blocksize=2**20):
     Calculate the MD5 checksum of a file.
     """
     md5 = hashlib.md5()
-    with open(filename, 'rb') as f:
+    with open(filename, 'rb') as fn:
         while True:
-            data = f.read(blocksize)
+            data = fn.read(blocksize)
             if not data:
                 break
             md5.update(data)
@@ -68,17 +72,15 @@ def rdb_bgsave():
     """
     Perform a background save of the RDB snapshot.
     """
-    bgsave_begin = datetime.now()
-    t0 = redis_client.lastsave()
+    last_save_time = redis_client.lastsave()
 
     if redis_client.bgsave():
         while True:
-            if redis_client.lastsave() != t0:
+            if redis_client.lastsave() != last_save_time:
                 break
             sleep(1)
         return 'ok'
-    else:
-        return 'failed'
+    return 'failed'
 
 
 def create_redis_rdb_snapshot():

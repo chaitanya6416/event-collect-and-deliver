@@ -7,19 +7,14 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_t
 import redis
 
 import config
-from logger import logger
 
 
-def log_after(retry_state):
-    '''retry decorator helper, to log after each retry'''
-    # logger.warning(
-    #     "[REDIS CONNECTING...] [Attempt Failed] attempt: %s", retry_state.attempt_number)
+# def log_after():
+#     '''retry decorator helper, to log after each retry'''
 
 
-def log_before(retry_state):
-    '''retry decorator helper, to log before each retry'''
-    # logger.info(
-    #     "[REDIS CONNECTING...] [Attempting Now] attempt: %s", retry_state.attempt_number)
+# def log_before():
+#     '''retry decorator helper, to log before each retry'''
 
 
 class RedisClient():
@@ -39,8 +34,8 @@ class RedisClient():
         retry=retry_if_exception_type(),
         stop=stop_after_attempt(3),
         wait=wait_fixed(3),
-        before=log_before,
-        after=log_after
+        # before=log_before,
+        # after=log_after
     )
     def get_client_instance(self):
         '''return the redis client instance'''

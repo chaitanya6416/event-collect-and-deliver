@@ -9,7 +9,8 @@ from delivery_thread import DeliveryThread
 from logger import logger
 from routes import setup_routes
 from redis_client import RedisClient
-from backup_tasks import scheduler
+from backups.backup_tasks import scheduler
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,7 +42,7 @@ async def lifespan(app: FastAPI):
             "[IN STARTUP] [Thread to] port: %s [Active Now]", port_number)
         config.delivery_threads.append(thread)
     logger.info("[STARTUP DONE]")
-    
+
     # #begin redis backups
     scheduler.start()
     yield
