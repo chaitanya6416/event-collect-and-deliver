@@ -77,7 +77,8 @@ The Event Collection and Delivery Service is designed to collect event payloads 
 
 ## Latest coverage report
 
-<img src="https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/2ef4e6dd-13ed-411c-9cc2-01310c3f3562" alt="collect-deliver" width="75%" height="75%">
-<!-- ![image](https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/2ef4e6dd-13ed-411c-9cc2-01310c3f3562) -->
+
+<img src="https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/22470c7b-6c11-4037-a7de-5f681eaea06c" alt="collect-deliver" width="75%" height="75%">
+<!-- ![image](https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/22470c7b-6c11-4037-a7de-5f681eaea06c) -->
 
  
