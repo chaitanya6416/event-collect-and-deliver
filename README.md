@@ -75,4 +75,9 @@ The Event Collection and Delivery Service is designed to collect event payloads 
 - `test_failed_delivery.py`
   -  `test_failed_delivery_and_check_redis_status`: The system is not only tracking the last successful delivered payload but also a list of failed payload IDs. This functionality is tested here, whether a failed delivery is updated in the Redis.
 
+## Latest coverage report
+
+<img src="https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/2ef4e6dd-13ed-411c-9cc2-01310c3f3562" alt="collect-deliver" width="75%" height="75%">
+<!-- ![image](https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/2ef4e6dd-13ed-411c-9cc2-01310c3f3562) -->
+
  
