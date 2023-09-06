@@ -41,13 +41,12 @@ def test_failed_delivery_and_check_redis_status(mock_response):
 
     client.post("/stop_delivery")
     client.post("/start_delivery?port=5555")
-    time.sleep(60)
+    time.sleep(1)
     payload = {"user_id": "123456", "payload": "This is a test payload"}
     response = client.post("/collect_api", json=payload)
-    time.sleep(120)
+    time.sleep(180)
     l = redis_client.keys("*")
     print(l)
     assert redis_client.get("failed_m_id_5555") is not None
     client.post("/stop_delivery")
     redis_client.flushall()
-    # assert True
