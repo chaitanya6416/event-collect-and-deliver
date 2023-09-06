@@ -15,8 +15,10 @@ def test_failed_delivery_and_check_redis_status():
     redis_client.flushall()
 
     TEMP_ENV_VARS = {
-        'WAIT_BETWEEN_REQUESTS': '1',
-        'RETRY_ATTEMPTS': '1',
+        'RETRY_MULTIPLIER': '1',
+        'RETRY_MIN': '1',
+        'RETRY_MAX': '1',
+        'RETRY_ATTEMPTS': '1'
     }
 
     os.environ.update(TEMP_ENV_VARS)

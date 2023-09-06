@@ -5,7 +5,7 @@ this file contains the delivery thread start up and running functionalities
 import json
 import threading
 import requests
-from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type, sleep_using_event, retry_if_result, retry_if_not_result
+from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential, retry_if_exception_type, sleep_using_event
 
 import config
 from logger import logger, log_with_thread_id
@@ -49,7 +49,8 @@ class DeliveryThread(threading.Thread):
         reraise=True,
         retry=retry_if_exception_type(requests.RequestException),
         stop=stop_after_attempt(config.RETRY_ATTEMPTS),
-        wait=wait_fixed(config.WAIT_BETWEEN_REQUESTS),
+        # wait=wait_fixed(config.WAIT_BETWEEN_REQUESTS),
+        wait=wait_exponential(config.RETRY_MULTIPLIER, config.RETRY_MIN, config.RETRY_MAX),
         before=log_before,
         after=log_after,
         sleep=sleep_using_event(threads_gracekill_event)
