@@ -9,14 +9,6 @@ import redis
 import config
 
 
-# def log_after():
-#     '''retry decorator helper, to log after each retry'''
-
-
-# def log_before():
-#     '''retry decorator helper, to log before each retry'''
-
-
 class RedisClient():
     '''Before running any redis command, we need to check if the server is up & running.'''
 
@@ -34,8 +26,7 @@ class RedisClient():
         retry=retry_if_exception_type(),
         stop=stop_after_attempt(3),
         wait=wait_fixed(3),
-        # before=log_before,
-        # after=log_after
+
     )
     def get_client_instance(self):
         '''return the redis client instance'''
@@ -47,6 +38,5 @@ class RedisClient():
         )
         ping_response = self.redis_client.ping()
         if ping_response:
-            # logger.info("Connected to Redis server successfully")
             return self.redis_client
         return None

@@ -10,6 +10,7 @@ from logger import logger
 from routes import setup_routes
 from redis_client import RedisClient
 from backups.backup_tasks import scheduler
+from global_threading_event import GlobalThreadingEvent
 
 
 @asynccontextmanager
@@ -20,6 +21,10 @@ async def lifespan(app: FastAPI):
     # startup
     logger.info(
         "[IN SYSTEM STARTUP] [REDIS SERVER CHECK] [SPAWNING EXISITING THREADS]")
+
+    # create a threading.event(), on which all the threads depend in case of
+    # SIGKILL
+    threads_gracekill_event = GlobalThreadingEvent()._event
 
     # Redis server up check
     try:
@@ -36,22 +41,33 @@ async def lifespan(app: FastAPI):
         port_number = each_thread.split("_")[-1]
         logger.info(
             '''[IN STARTUP] Found history in Redis [Spawing thread to Destination] port: %s''', port_number)
-        thread = DeliveryThread(port=each_thread.split("_")[-1])
-        thread.start()
+        thread = DeliveryThread(port=port_number)
+
         logger.info(
-            "[IN STARTUP] [Thread to] port: %s [Active Now]", port_number)
+            "[IN STARTUP] [Thread to] port: %s [Activating Now...]", port_number)
+        thread.start()
         config.delivery_threads.append(thread)
     logger.info("[STARTUP DONE]")
 
-    # #begin redis backups
+    # begin redis backups
     scheduler.start()
     yield
     # shutdown
-    # Gracefully terminate all threads
+
+    # set the below thread.event() to gracefully stop all threads
+    # struck in @retry post_the_payload
     logger.info("[IN SHUTDOWN] Terminating all Threads")
+
+    # turn running flag to false has to be done first
     for thread in config.delivery_threads:
         thread.stop()
+
+    # set the thread.event()
+    threads_gracekill_event.set()
+
+    for thread in config.delivery_threads:
         thread.join()
+
     config.delivery_threads.clear()
     scheduler.shutdown()
     logger.info("[IN SHUTDOWN] Done")
@@ -59,7 +75,3 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 setup_routes(app)
-
-
-if __name__ == "__main__":
-    run(app, host="0.0.0.0", port=8000, reload=True)
