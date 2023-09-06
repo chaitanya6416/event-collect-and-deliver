@@ -2,18 +2,16 @@
     redis state, this file is responsible to create such a backup file of
     redis db '''
 
-import redis
+from logger import logger
+from redis_client import RedisClient
 import os
 import shutil
 from datetime import datetime
 import sys
+sys.path.append(os.path.abspath(".."))
 
-redis_client = redis.StrictRedis(
-    host='localhost',
-    port=6379,
-    db=0,
-    decode_responses=True
-)
+
+redis_client = RedisClient().get_client_instance()
 
 
 def copy_aof(aof_folder_path, backup_dir):
@@ -26,7 +24,7 @@ def copy_aof(aof_folder_path, backup_dir):
     backup_folder_name = f"aof_backups_{timestamp}"
     backup_folder_path = os.path.join(backup_dir, backup_folder_name)
 
-    print(f"Copying AOF folder to: {backup_folder_path}")
+    logger.info(f"Copying AOF folder to: {backup_folder_path}")
 
     if not os.path.exists(backup_dir):
         os.makedirs(backup_dir)
@@ -38,7 +36,7 @@ def copy_aof(aof_folder_path, backup_dir):
         return False
 
     shutil.copytree(aof_folder_path, backup_folder_path)
-    print(f'AOF folder backup created at: {backup_folder_path}')
+    logger.info(f'AOF folder backup created at: {backup_folder_path}')
     return True
 
 
@@ -54,4 +52,4 @@ def create_redis_aof_backup_and_copy():
         dir_config['dir'], appendonlydir_folder['appenddirname'])
 
     # Copy the AOF file to the "aof_backups" folder
-    copy_aof(aof_folder_path, "/aof_backups")
+    copy_aof(aof_folder_path, os.path.join(os.getcwd(), "aof_backups"))

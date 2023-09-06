@@ -1,35 +1,16 @@
 ''' one type of redis back is rdb which stores the db instance in a byte format,
     this file helps us in taking rdb snapshots '''
 
+from logger import logger
+from redis_client import RedisClient
 import os
 import sys
 import shutil
-import hashlib
 from datetime import datetime
 from time import sleep
-import redis
+sys.path.append(os.path.abspath(".."))
 
-
-redis_client = redis.StrictRedis(
-    host='localhost',
-    port=6379,
-    db=0,
-    decode_responses=True
-)
-
-
-def file_md5(filename, blocksize=2**20):
-    """
-    Calculate the MD5 checksum of a file.
-    """
-    md5 = hashlib.md5()
-    with open(filename, 'rb') as fn:
-        while True:
-            data = fn.read(blocksize)
-            if not data:
-                break
-            md5.update(data)
-    return md5.digest()
+redis_client = RedisClient().get_client_instance()
 
 
 def rdb_path():
@@ -51,7 +32,7 @@ def copy_rdb(rdb, backup_dir, port):
     backup_filename = f"{timestamp}(port_{port}).rdb"
     backup_filepath = os.path.join(backup_dir, backup_filename)
 
-    print(f"Copying RDB to: {backup_filepath}")
+    logger.info(f"Copying RDB to: {backup_filepath}")
 
     if not os.path.exists(backup_dir):
         os.makedirs(backup_dir)
@@ -63,7 +44,7 @@ def copy_rdb(rdb, backup_dir, port):
         return False
 
     shutil.copy2(rdb, backup_filepath)
-    print(
+    logger.info(
         f'Backup {backup_filepath} created. Size: {os.path.getsize(backup_filepath)} bytes.')
     return True
 
@@ -90,4 +71,4 @@ def create_redis_rdb_snapshot():
     if rdb_bgsave() == 'ok':
         rdb = rdb_path()
         print(f"RDB Path: {rdb}")
-        copy_rdb(rdb, "/rdb_backups", 6379)
+        copy_rdb(rdb, os.path.join(os.getcwd(), "rdb_backups"), 6379)
