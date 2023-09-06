@@ -4,8 +4,7 @@ The Event Collection and Delivery Service is a FastAPI-based application that co
 
 ## Design
 
-<img src="https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/6df0f01c-b5e0-4c7d-a2d1-c72d5ab3c4cb" alt="collect-deliver" width="75%" height="75%">
-
+<img src="https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/3faeabd2-2648-4271-9b6a-1f883df93c8c" alt="collect-deliver" width="75%" height="75%">
 
 
 The Event Collection and Delivery Service is designed to collect event payloads and deliver them to specified ports using threads. The application utilizes FastAPI for creating RESTful APIs, Redis for storing and managing payload data, and threading for parallel processing of payload delivery.
