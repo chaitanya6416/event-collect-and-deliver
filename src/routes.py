@@ -70,9 +70,11 @@ def setup_routes(app: FastAPI):
 
     @app.post("/stop_delivery")
     async def stop_delivery():
-        ''' an endpointo gracefully stop all threads '''
+        ''' stop after current delivery ends '''
         for thread in config.delivery_threads:
             thread.stop()
+
+        for thread in config.delivery_threads:
             thread.join()
         config.delivery_threads.clear()
         return {"message": "All delivery threads stopped"}
