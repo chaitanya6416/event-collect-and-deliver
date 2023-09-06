@@ -1,8 +1,22 @@
-version: "3"
 services:
-  event-collect-deliver:
-    image: image_name_xyz
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - ~/data:/data
+
+  app:
+    build: .
+    container_name: event_deliver
     ports:
       - "8000:8000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    environment:
+      REDIS_HOST: 'redis'
+    volumes:
+      - ~/data:/data
+      - ~/rdb_backups:/app/rdb_backups
+      - ~/aof_backups:/app/aof_backups
+    depends_on:
+      - redis
