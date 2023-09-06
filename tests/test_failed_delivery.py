@@ -6,7 +6,7 @@ import time
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 from requests.models import Response
-import json 
+import json
 
 from src.main import app
 from src.redis_client import RedisClient
@@ -16,14 +16,13 @@ client = TestClient(app)
 @patch('src.simulate_service.deliver_and_get_response')
 def test_failed_delivery_and_check_redis_status(mock_response):
 
-
     response = Response()
     response.status_code = 400
     response._content = json.dumps({
-            'status': 400,
-            'message': 'Bad Request',
-            'error_details': 'Invalid payload'
-        }).encode('utf-8')
+        'status': 400,
+        'message': 'Bad Request',
+        'error_details': 'Invalid payload'
+    }).encode('utf-8')
 
     mock_response = response
 
@@ -31,10 +30,10 @@ def test_failed_delivery_and_check_redis_status(mock_response):
     redis_client.flushall()
 
     TEMP_ENV_VARS = {
-        'RETRY_MULTIPLIER': '1',
+        'RETRY_MULTIPLIER': '2',
         'RETRY_MIN': '1',
-        'RETRY_MAX': '1',
-        'RETRY_ATTEMPTS': '1'
+        'RETRY_MAX': '2',
+        'RETRY_ATTEMPTS': '2'
     }
 
     os.environ.update(TEMP_ENV_VARS)
