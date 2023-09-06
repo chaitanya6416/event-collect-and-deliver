@@ -25,7 +25,7 @@ def test_failed_delivery_and_check_redis_status():
 
     client.post("/stop_delivery")
     client.post("/start_delivery?port=5555")
-    time.sleep(60)
+    time.sleep(10)
     payload = {"user_id": "123456", "payload": "This is a test payload"}
     response = client.post("/collect_api", json=payload)
     time.sleep(60)
