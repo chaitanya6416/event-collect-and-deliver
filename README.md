@@ -17,6 +17,15 @@ The Event Collection and Delivery Service is designed to collect event payloads 
 - `/start_delivery`: POST endpoint for starting payload delivery to a specified port.
 - `/stop_delivery`: POST endpoint for stopping all payload delivery threads.
 
+## How to execute?
+### Run project?
+- run `docker-compose up`
+### Get coverage report
+- run `make coverage`
+### Get lint score
+- run `make lint`
+
+
 ## Let's talk deliverables!
 
 | Requirement | what to achieve? | How did we do it? |
@@ -52,6 +61,16 @@ The Event Collection and Delivery Service is designed to collect event payloads 
 - `routes.py`: Defines the API routes using FastAPI, including the `/collect_api`, `/start_delivery`, and `/stop_delivery` endpoints.
 - `delivery_thread.py`: Contains the `DeliveryThread` class responsible for delivering payloads to specified ports using threads.
 - `logger.py`: Provides logging utilities for the application.
+
+
+## Some interesting concepts/articles on the development way
+|About| Link|
+|----|-----|
+|Tenacity retry module. <br> Used this module earlier, but had to explore the source code to really find out the way the exit in case of threadin.event(). used `sleep=sleep_using_event`| https://tenacity.readthedocs.io/en/latest/ |
+|Tini. <br> It ensures that the default signal handlers work for the software you run in your Docker image. While trying to give a sigint interupt while running the application on docker found an issue with fastapi shutdown. Hence found & used this. |https://github.com/krallin/tini|
+|FastAPI lifespan shutdown issue discussion. <br> Spent a lot of time understanding the problem in the code & finally found this. |https://github.com/tiangolo/fastapi/issues/5072|
+|apscheduler - Advanced Python Scheduler| https://apscheduler.readthedocs.io/en/3.x/index.html |
+
 
 
 ## Let's talk Test cases
