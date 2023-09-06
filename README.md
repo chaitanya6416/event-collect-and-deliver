@@ -8,22 +8,24 @@ The Event Collection and Delivery Service is a FastAPI-based application that co
 
 
 
-The Event Collection and Delivery Service is designed to collect event payloads and deliver them to specified ports using threads. The application utilizes FastAPI for creating RESTful APIs, Redis for storing and managing payload data and threading for parallel processing of payload delivery.
+The Event Collection and Delivery Service is designed to collect event payloads and deliver them to specified ports using threads. The application utilizes FastAPI for creating RESTful APIs, Redis for storing and managing payload data, and threading for parallel processing of payload delivery.
 
 
 ## API Endpoints
 
 - `/collect_api`: POST endpoint for collecting event payloads. Requires `user_id` and `payload` fields in the JSON payload.
 - `/start_delivery`: POST endpoint for starting payload delivery to a specified port.
-- `/stop_delivery`: POST endpoint for stopping all payload delivery threads.
+- `/stop_delivery`: POST endpoint for stopping all payload delivery threads. Delivers the payload already in consideration and then exits. (this is different from SIGINT/ctrl+c signal. How SIGINT/ctrl+c is handled is mentioned below!).
 
 ## How to execute?
-### Run project?
-- run `docker-compose up`
-### Get coverage report
-- run `make coverage`
-### Get lint score
-- run `make lint`
+
+|Which module to run ?| command to run|
+|---------------------|---------------|
+|Run project| `docker-compose up` |
+|Get coverage report | `make coverage` <br> Coverage(latest): 91%. <br> Screenshot for the same. <br> <img src="https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/fb85f27f-0aa7-4032-905a-a491a3ef0fa1" alt="collect-deliver" width="75%" height="75%">|
+|Get lint score | `make lint` |
+
+
 
 
 ## Let's talk deliverables!
@@ -57,10 +59,13 @@ The Event Collection and Delivery Service is designed to collect event payloads 
 
 ## Structure
 
-- `main.py`: The main entry point of the FastAPI application.
-- `routes.py`: Defines the API routes using FastAPI, including the `/collect_api`, `/start_delivery`, and `/stop_delivery` endpoints.
 - `delivery_thread.py`: Contains the `DeliveryThread` class responsible for delivering payloads to specified ports using threads.
-- `logger.py`: Provides logging utilities for the application.
+- `global_threading_event.py`:  Declares & when used returns a single threading.event(), which is listened to by all threads to exit in case of SIGINT.
+- `logger.py`: Declares basic  logging format. Imported by others and is used. Also has a special format to print thread_id when called log_with_thread_id().
+- `main.py`: The main entry point of the FastAPI application.
+- `redis_client.py`: Returns a redis instance when asked for.
+- `routes.py`: Defines the API routes using FastAPI, including the `/collect_api`, `/start_delivery`, and `/stop_delivery` endpoints.
+- `simulate_service`: Should be considered as if it is some external destination. It randomly responds to our requests (Delays, accepts, rejects).
 
 
 ## Some interesting concepts/articles on the development way
@@ -92,12 +97,9 @@ The Event Collection and Delivery Service is designed to collect event payloads 
   -  `test_spawn_already_registered_thread_on_restart`: Imagine a scenario where the system was already running and a few delivery threads were already in the run. When the system restarts, it has to resume these threads as well. This functionality is tested here.
  
 - `test_failed_delivery.py`
-  -  `test_failed_delivery_and_check_redis_status`: The system is not only tracking the last successful delivered payload but also a list of failed payload IDs. This functionality is tested here, whether a failed delivery is updated in the Redis.
+  -  `test_failed_delivery_and_check_redis_status`: The system is not only tracking the last successfully delivered payload but also a list of failed payload IDs. This functionality is tested here, whether a failed delivery is updated in the Redis.
 
-## Latest coverage report
+- `test_successful_delivery.py`
+  -  `test_successful_delivery_and_check_redis_status`: After a payload is successfully delivered, its status must be updated in redis. This functionality is checked here.
 
 
-<img src="https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/22470c7b-6c11-4037-a7de-5f681eaea06c" alt="collect-deliver" width="75%" height="75%">
-<!-- ![image](https://github.com/chaitanya6416/event-collect-and-deliver/assets/36512605/22470c7b-6c11-4037-a7de-5f681eaea06c) -->
-
- 
