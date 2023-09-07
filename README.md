@@ -74,7 +74,7 @@ The Event Collection and Delivery Service is designed to collect event payloads 
 |Tini. <br> It ensures that the default signal handlers work for the software you run in your Docker image. While trying to give a sigint interupt while running the application on docker found an issue with fastapi shutdown. Hence found & used this. |https://github.com/krallin/tini|
 |FastAPI lifespan shutdown issue discussion. <br> Spent a lot of time understanding the problem in the code & finally found this. |https://github.com/tiangolo/fastapi/issues/5072|
 |apscheduler - Advanced Python Scheduler| https://apscheduler.readthedocs.io/en/3.x/index.html |
-
+| Ctrl+c on docker-compose up  | https://github.com/docker/compose/issues/7135 |
 
 
 ## Let's talk Test cases
