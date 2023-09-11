@@ -2,13 +2,12 @@
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from uvicorn import run
 
 import config
 from delivery_thread import DeliveryThread
 from logger import logger
 from routes import setup_routes
-from redis_client import RedisClient
+from redis_client import get_redis_instance
 from backups.backup_tasks import scheduler
 from global_threading_event import get_global_threading_event
 
@@ -28,14 +27,14 @@ async def lifespan(app: FastAPI):
 
     # Redis server up check
     try:
-        redis_client = RedisClient().get_client_instance()
-        config.redis_client = redis_client
+        redis_client_instance = get_redis_instance()
+        
     except Exception as ex:
         logger.error("Couldnt establish REDIS Connection. Exception: %s", ex)
         raise ex
 
     # Load already existing threads, by checking from redis
-    fetch_already_existing_threads = redis_client.keys(
+    fetch_already_existing_threads = redis_client_instance.keys(
         "last_delivered_m_id_to_*")
     for each_thread in fetch_already_existing_threads:
         port_number = each_thread.split("_")[-1]

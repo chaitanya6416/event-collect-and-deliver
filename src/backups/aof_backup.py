@@ -2,16 +2,15 @@
     redis state, this file is responsible to create such a backup file of
     redis db '''
 
-from logger import logger
-from redis_client import RedisClient
 import os
 import shutil
 from datetime import datetime
 import sys
 sys.path.append(os.path.abspath(".."))
+from logger import logger
+from redis_client import get_redis_instance
 
-
-redis_client = RedisClient().get_client_instance()
+redis_client_instance = get_redis_instance()
 
 
 def copy_aof(aof_folder_path, backup_dir):
@@ -43,11 +42,11 @@ def copy_aof(aof_folder_path, backup_dir):
 def create_redis_aof_backup_and_copy():
     ''' Create a Redis AOF backup and copy it to the "aof_backups" folder. '''
     # Create a Redis AOF backup
-    redis_client.bgrewriteaof()
+    redis_client_instance.bgrewriteaof()
 
     # Get the path to the AOF file
-    dir_config = redis_client.config_get('dir')
-    appendonlydir_folder = redis_client.config_get('appenddirname')
+    dir_config = redis_client_instance.config_get('dir')
+    appendonlydir_folder = redis_client_instance.config_get('appenddirname')
     aof_folder_path = os.path.join(
         dir_config['dir'], appendonlydir_folder['appenddirname'])
 

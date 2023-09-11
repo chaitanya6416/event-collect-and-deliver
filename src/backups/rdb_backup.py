@@ -1,8 +1,6 @@
 ''' one type of redis back is rdb which stores the db instance in a byte format,
     this file helps us in taking rdb snapshots '''
 
-from logger import logger
-from redis_client import RedisClient
 import os
 import sys
 import shutil
@@ -10,15 +8,18 @@ from datetime import datetime
 from time import sleep
 sys.path.append(os.path.abspath(".."))
 
-redis_client = RedisClient().get_client_instance()
+from logger import logger
+from redis_client import get_redis_instance
+
+redis_client_instance = get_redis_instance()
 
 
 def rdb_path():
     """
     Get and return the Redis config `dbfilename`.
     """
-    dir_config = redis_client.config_get('dir')
-    dbfilename_config = redis_client.config_get('dbfilename')
+    dir_config = redis_client_instance.config_get('dir')
+    dbfilename_config = redis_client_instance.config_get('dbfilename')
     return os.path.join(dir_config['dir'], dbfilename_config['dbfilename'])
 
 
@@ -53,11 +54,11 @@ def rdb_bgsave():
     """
     Perform a background save of the RDB snapshot.
     """
-    last_save_time = redis_client.lastsave()
+    last_save_time = redis_client_instance.lastsave()
 
-    if redis_client.bgsave():
+    if redis_client_instance.bgsave():
         while True:
-            if redis_client.lastsave() != last_save_time:
+            if redis_client_instance.lastsave() != last_save_time:
                 break
             sleep(1)
         return 'ok'
