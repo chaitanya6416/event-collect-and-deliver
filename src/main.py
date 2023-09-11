@@ -10,7 +10,7 @@ from logger import logger
 from routes import setup_routes
 from redis_client import RedisClient
 from backups.backup_tasks import scheduler
-from global_threading_event import GlobalThreadingEvent
+from global_threading_event import get_global_threading_event
 
 
 @asynccontextmanager
@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 
     # create a threading.event(), on which all the threads depend in case of
     # SIGKILL
-    threads_gracekill_event = GlobalThreadingEvent()._event
+    threads_gracekill_event = get_global_threading_event()
 
     # Redis server up check
     try:

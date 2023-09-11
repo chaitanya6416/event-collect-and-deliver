@@ -4,8 +4,8 @@ import threading
 import time
 from fastapi.testclient import TestClient
 
-from src.main import app
-from src.redis_client import RedisClient
+from main import app
+from redis_client import RedisClient
 
 
 def test_spawn_already_registered_thread_on_restart():
@@ -17,6 +17,14 @@ def test_spawn_already_registered_thread_on_restart():
     with TestClient(app) as client:
         time.sleep(10)
         threads_after_app_starts = threading.active_count()
-        assert threads_after_app_starts - threads_before_app_starts >= 3
-
-    client.post("/stop_delivery")
+        client.post("/stop_delivery")
+        time.sleep(2)
+        # assert threads_after_app_starts - threads_before_app_starts >= 3
+    # time.sleep(5)
+    # client = TestClient(app)
+    # time.sleep(10)
+    # threads_after_app_starts = threading.active_count()
+    # client.post("/stop_delivery")
+    # time.sleep(2)
+    assert threads_after_app_starts - threads_before_app_starts >= 3
+    

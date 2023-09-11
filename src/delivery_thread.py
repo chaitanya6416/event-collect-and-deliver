@@ -9,12 +9,12 @@ from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential, re
 
 import config
 from logger import logger, log_with_thread_id
-from redis_client import RedisClient
+from redis_client import get_redis_instance
 from simulate_service import deliver_and_get_response
-from global_threading_event import GlobalThreadingEvent
+from global_threading_event import get_global_threading_event
 
 
-threads_gracekill_event = GlobalThreadingEvent()._event
+threads_gracekill_event = get_global_threading_event()
 
 
 class CustomEndError(BaseException):
@@ -43,7 +43,7 @@ class DeliveryThread(threading.Thread):
         self.running = True
         self.thread_status_in_redis = f"last_delivered_m_id_to_{self.port}"
         self.thread_failures_in_redis = f"failed_m_id_{self.port}"
-        self._redis_client = RedisClient().get_client_instance()
+        self._redis_client = get_redis_instance()
 
     @retry(
         reraise=True,

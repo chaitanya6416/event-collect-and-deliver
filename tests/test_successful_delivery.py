@@ -1,23 +1,20 @@
 ''' we are testing /start_delivery endpoint '''
 
 import os
-import threading
 import time
 from fastapi.testclient import TestClient
-import unittest
 from unittest.mock import patch
 import json
 
 from requests.models import Response
-from src.main import app
-from src.redis_client import RedisClient
+from main import app
+from redis_client import RedisClient
 client = TestClient(app)
 
 
 @patch('src.simulate_service.deliver_and_get_response')
 def test_successful_delivery_and_check_redis_status(mock_response):
-
-    response = Response()
+    response = Response() 
     response.status_code = 200
     response._content = json.dumps({
         'status': 200,

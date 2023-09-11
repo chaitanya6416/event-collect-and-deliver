@@ -1,8 +1,8 @@
 ''' we are here indeed testing the collect_api/ endpoint '''
 
 from fastapi.testclient import TestClient
-from src.main import app
-from src.redis_client import RedisClient
+from main import app
+from redis_client import RedisClient
 import config
 client = TestClient(app)
 

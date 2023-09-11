@@ -4,8 +4,8 @@ import threading
 import time
 from fastapi.testclient import TestClient
 
-from src.main import app
-from src.redis_client import RedisClient
+from main import app
+from redis_client import RedisClient
 client = TestClient(app)
 
 

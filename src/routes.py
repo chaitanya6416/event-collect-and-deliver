@@ -6,7 +6,7 @@ import redis
 
 import config
 from delivery_thread import DeliveryThread
-from redis_client import RedisClient
+from redis_client import get_redis_instance
 from logger import logger
 
 
@@ -31,9 +31,9 @@ def setup_routes(app: FastAPI):
         }
         payload_json = json.dumps(payload_to_store)
 
-        redis_client = RedisClient().get_client_instance()
+        redis_client_instance = get_redis_instance()
         # Add payload to the Redis Stream
-        redis_client.xadd(config.get_stream_name(),
+        redis_client_instance.xadd(config.get_stream_name(),
                           {"payload": payload_json})
 
         return {"message": "Payload collected and append to stream"}
@@ -41,9 +41,9 @@ def setup_routes(app: FastAPI):
     @app.post("/start_delivery")
     async def start_delivery(port: int):
         ''' adding a delivery to a destination port is handled here '''
-        redis_client = RedisClient().get_client_instance()
+        redis_client_instance = get_redis_instance()
         # first check if this destination thread is already running
-        if redis_client.get(f"last_delivered_m_id_to_{port}") is not None:
+        if redis_client_instance.get(f"last_delivered_m_id_to_{port}") is not None:
             logger.warning(
                 "[Thread] to destination port = %s is already active", port)
             return
@@ -52,7 +52,7 @@ def setup_routes(app: FastAPI):
 
         # Initialize the thread_status to last-entry timestamp
         try:
-            stream_meta_info = redis_client.xinfo_stream(
+            stream_meta_info = redis_client_instance.xinfo_stream(
                 config.get_stream_name())
             last_entry_timestamp = stream_meta_info["last-entry"][0]
         except redis.exceptions.ResponseError as ex:
@@ -63,7 +63,7 @@ def setup_routes(app: FastAPI):
                 # Handle other Redis response errors here
                 raise ex
 
-        redis_client.set(thread.thread_status_in_redis, last_entry_timestamp)
+        redis_client_instance.set(thread.thread_status_in_redis, last_entry_timestamp)
         thread.start()
         config.delivery_threads.append(thread)
         return {"message": f"Delivery thread for port {port} started"}

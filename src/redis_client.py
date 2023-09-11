@@ -40,3 +40,7 @@ class RedisClient():
         if ping_response:
             return self.redis_client
         return None
+
+
+def get_redis_instance():
+    return RedisClient().get_client_instance()
