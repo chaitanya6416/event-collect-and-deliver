@@ -20,4 +20,4 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(create_redis_rdb_snapshot, 'interval',
                   minutes=config.RDB_BACKUPS_INTERVAL)
 scheduler.add_job(create_redis_aof_backup_and_copy,
-                  'interval', minutes=config.AOF_BACKUPS_INTERVAL)
+                  'interval', seconds=config.AOF_BACKUPS_INTERVAL)

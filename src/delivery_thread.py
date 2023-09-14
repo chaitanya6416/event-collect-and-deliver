@@ -50,7 +50,8 @@ class DeliveryThread(threading.Thread):
         retry=retry_if_exception_type(requests.RequestException),
         stop=stop_after_attempt(config.RETRY_ATTEMPTS),
         # wait=wait_fixed(config.WAIT_BETWEEN_REQUESTS),
-        wait=wait_exponential(config.RETRY_MULTIPLIER, config.RETRY_MIN, config.RETRY_MAX),
+        wait=wait_exponential(multiplier=config.RETRY_MULTIPLIER,
+                              min=config.RETRY_MIN, max=config.RETRY_MAX),
         before=log_before,
         after=log_after,
         sleep=sleep_using_event(threads_gracekill_event)
