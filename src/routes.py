@@ -9,6 +9,8 @@ from delivery_thread import DeliveryThread
 from redis_client import get_redis_instance
 from logger import logger
 
+redis_client_instance = get_redis_instance()
+
 
 def setup_routes(app: FastAPI):
     ''' instead of defining all routes in main, we have moved them here, 
@@ -25,23 +27,18 @@ def setup_routes(app: FastAPI):
             raise HTTPException(
                 status_code=400, detail="Both user_id and payload are required")
 
-        payload_to_store = {
-            "user_id": user_id,
-            "payload": actual_payload
-        }
-        payload_json = json.dumps(payload_to_store)
+        payload_json = json.dumps(payload)
 
-        redis_client_instance = get_redis_instance()
         # Add payload to the Redis Stream
         redis_client_instance.xadd(config.get_stream_name(),
-                          {"payload": payload_json})
+                                   {"payload": payload_json})
 
         return {"message": "Payload collected and append to stream"}
 
     @app.post("/start_delivery")
     async def start_delivery(port: int):
         ''' adding a delivery to a destination port is handled here '''
-        redis_client_instance = get_redis_instance()
+
         # first check if this destination thread is already running
         if redis_client_instance.get(f"last_delivered_m_id_to_{port}") is not None:
             logger.warning(
@@ -63,7 +60,8 @@ def setup_routes(app: FastAPI):
                 # Handle other Redis response errors here
                 raise ex
 
-        redis_client_instance.set(thread.thread_status_in_redis, last_entry_timestamp)
+        redis_client_instance.set(
+            thread.thread_status_in_redis, last_entry_timestamp)
         thread.start()
         config.delivery_threads.append(thread)
         return {"message": f"Delivery thread for port {port} started"}
